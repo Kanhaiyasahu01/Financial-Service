@@ -1,0 +1,107 @@
+Use this exact flow to test your backend end to end.
+
+See API details in README.md, and the summary logic in dashboard.service.js.
+
+1. Prepare environment
+- Ensure MongoDB is reachable from your MONGODB_URI in .env.
+- Ensure JWT_SECRET is set in .env.
+
+2. Start the server
+- Run:
+  npm run dev
+- Expected startup logs:
+  MongoDB connected
+  Server running on port 8080
+
+3. Health check
+- Run:
+  curl -i http://localhost:8080/api/v1/health
+- Expect status 200 and success true.
+
+4. Register first user (auto admin bootstrap)
+- Run:
+  curl -s -X POST http://localhost:8080/api/v1/auth/register -H "Content-Type: application/json" -d '{"name":"Admin One","email":"admin1@test.com","password":"password123"}'
+- Expect role to be admin for this first user.
+
+5. Login as admin and store token
+- Run:
+  ADMIN_TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" -d '{"email":"admin1@test.com","password":"password123"}' | jq -r '.data.token')
+- Check token:
+  echo $ADMIN_TOKEN
+
+6. Create analyst and viewer users (admin only endpoint)
+- Create analyst:
+  curl -s -X POST http://localhost:8080/api/v1/users -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"name":"Analyst User","email":"analyst@test.com","password":"password123","role":"analyst","status":"active"}'
+- Create viewer:
+  curl -s -X POST http://localhost:8080/api/v1/users -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"name":"Viewer User","email":"viewer@test.com","password":"password123","role":"viewer","status":"active"}'
+
+7. Login as analyst and viewer
+- Analyst token:
+  ANALYST_TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" -d '{"email":"analyst@test.com","password":"password123"}' | jq -r '.data.token')
+- Viewer token:
+  VIEWER_TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" -d '{"email":"viewer@test.com","password":"password123"}' | jq -r '.data.token')
+
+8. Create financial records (admin allowed)
+- Run these 3 samples:
+  curl -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":5000,"type":"income","category":"Salary","date":"2026-04-01","notes":"April salary"}'
+  curl -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":300,"type":"expense","category":"Food","date":"2026-04-02","notes":"Groceries"}'
+  curl -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"amount":1200,"type":"expense","category":"Rent","date":"2026-04-03","notes":"Monthly rent"}'
+
+9. Verify read access by role
+- Viewer can list records:
+  curl -i -s "http://localhost:8080/api/v1/records?page=1&limit=10" -H "Authorization: Bearer $VIEWER_TOKEN"
+- Analyst can list records:
+  curl -i -s "http://localhost:8080/api/v1/records?page=1&limit=10" -H "Authorization: Bearer $ANALYST_TOKEN"
+
+10. Verify write restrictions by role
+- Viewer create should fail with 403:
+  curl -i -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $VIEWER_TOKEN" -H "Content-Type: application/json" -d '{"amount":10,"type":"expense","category":"Test","date":"2026-04-04"}'
+- Analyst create should fail with 403:
+  curl -i -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $ANALYST_TOKEN" -H "Content-Type: application/json" -d '{"amount":10,"type":"expense","category":"Test","date":"2026-04-04"}'
+
+11. Test filtering, sorting, pagination, search
+- Type filter:
+  curl -s "http://localhost:8080/api/v1/records?type=expense" -H "Authorization: Bearer $ANALYST_TOKEN"
+- Date range:
+  curl -s "http://localhost:8080/api/v1/records?startDate=2026-04-01&endDate=2026-04-30" -H "Authorization: Bearer $ANALYST_TOKEN"
+- Category filter:
+  curl -s "http://localhost:8080/api/v1/records?category=Food" -H "Authorization: Bearer $ANALYST_TOKEN"
+- Search notes:
+  curl -s "http://localhost:8080/api/v1/records?search=rent" -H "Authorization: Bearer $ANALYST_TOKEN"
+
+12. Test dashboard summary
+- Run:
+  curl -s http://localhost:8080/api/v1/dashboard/summary -H "Authorization: Bearer $VIEWER_TOKEN"
+- Validate:
+  income = 5000
+  expenses = 1500
+  netBalance = 3500
+  recentActivity has latest records
+  categoryTotals contains Food and Rent
+  monthlyTrends includes current month
+
+13. Test user admin endpoints
+- List users:
+  curl -s http://localhost:8080/api/v1/users -H "Authorization: Bearer $ADMIN_TOKEN"
+- Try same call as analyst and expect 403:
+  curl -i -s http://localhost:8080/api/v1/users -H "Authorization: Bearer $ANALYST_TOKEN"
+
+14. Test validation and error handling
+- Missing required field:
+  curl -i -s -X POST http://localhost:8080/api/v1/records -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"type":"income"}'
+  Expect 400.
+- Invalid Mongo id:
+  curl -i -s http://localhost:8080/api/v1/records/123 -H "Authorization: Bearer $ADMIN_TOKEN"
+  Expect 400.
+- Missing token:
+  curl -i -s http://localhost:8080/api/v1/records
+  Expect 401.
+- Unknown route:
+  curl -i -s http://localhost:8080/api/v1/not-a-route
+  Expect 404.
+
+15. Test inactive user behavior
+- As admin, update viewer to inactive using user id from list:
+  curl -s -X PATCH http://localhost:8080/api/v1/users/USER_ID_HERE -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"status":"inactive"}'
+- Try login as that user, expect 403 inactive account.
+
