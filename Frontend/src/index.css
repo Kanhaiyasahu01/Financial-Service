@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-1: #f6fbff;
+  --bg-2: #e9f9f2;
+  --ink: #0f2230;
+  --muted: #4f6473;
+  --card: rgba(255, 255, 255, 0.78);
+  --line: #d8e7ef;
+  --accent: #0ea5a4;
+  --accent-deep: #0f766e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% -10%, #a7f3d0 0%, transparent 35%),
+    radial-gradient(circle at 100% 0%, #bae6fd 0%, transparent 30%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+}
+
+.reveal {
+  animation: reveal 600ms ease both;
+}
+
+.reveal-delay {
+  animation: reveal 800ms ease both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
