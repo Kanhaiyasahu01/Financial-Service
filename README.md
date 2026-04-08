@@ -331,6 +331,6 @@ This project includes a Render blueprint file: `render.yaml`.
 3. Update frontend API base URL/proxy target to this Render URL for production.
 
 ## Notes / Tradeoffs
-- Hard delete is used for user and record delete actions.
+- User delete uses soft delete (`isDeleted`, `deletedAt`); records use hard delete.
 - No refresh-token flow included (single access token for simplicity).
 - If needed, soft delete and audit logs can be added as next improvements.

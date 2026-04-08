@@ -6,16 +6,19 @@ export class UserRepository {
   }
 
   async findByEmail(email, includePassword = false) {
-    const query = User.findOne({ email: email.toLowerCase() });
+    const query = User.findOne({
+      email: email.toLowerCase(),
+      isDeleted: { $ne: true },
+    });
     return includePassword ? query.select("+password") : query;
   }
 
   async findById(id) {
-    return User.findById(id);
+    return User.findOne({ _id: id, isDeleted: { $ne: true } });
   }
 
   async list({ role, status, page = 1, limit = 10 }) {
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
 
     if (role) {
       filter.role = role;
@@ -44,17 +47,25 @@ export class UserRepository {
   }
 
   async updateById(id, updateData) {
-    return User.findByIdAndUpdate(id, updateData, {
+    return User.findOneAndUpdate({ _id: id, isDeleted: { $ne: true } }, updateData, {
       new: true,
       runValidators: true,
     });
   }
 
   async deleteById(id) {
-    return User.findByIdAndDelete(id);
+    return User.findOneAndUpdate(
+      { _id: id, isDeleted: { $ne: true } },
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+        status: "inactive",
+      },
+      { new: true }
+    );
   }
 
   async count() {
-    return User.countDocuments();
+    return User.countDocuments({ isDeleted: { $ne: true } });
   }
 }
