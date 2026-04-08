@@ -6,6 +6,7 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', roles: ['admin', 'analyst', 'viewer'] },
   { to: '/records', label: 'Records', roles: ['admin', 'analyst', 'viewer'] },
   { to: '/users', label: 'Users', roles: ['admin'] },
+  { to: '/api-docs', label: 'API Docs', roles: ['admin', 'analyst', 'viewer'] },
 ]
 
 export function AppShell() {

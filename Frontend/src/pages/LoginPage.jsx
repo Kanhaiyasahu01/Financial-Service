@@ -1,4 +1,5 @@
 import { AuthPanel } from '../components/AuthPanel'
+import { Link } from 'react-router-dom'
 
 export function LoginPage() {
   return (
@@ -23,6 +24,12 @@ export function LoginPage() {
               <p className="font-medium text-slate-800">React + Redux Toolkit</p>
             </div>
           </div>
+          <Link
+            className="mt-4 inline-flex rounded-xl border border-teal-300 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100"
+            to="/api-docs"
+          >
+            View API Documentation
+          </Link>
         </div>
         <AuthPanel />
       </div>

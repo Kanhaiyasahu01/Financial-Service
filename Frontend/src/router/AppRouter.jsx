@@ -5,6 +5,7 @@ import { LoginPage } from '../pages/LoginPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { RecordsPage } from '../pages/RecordsPage'
 import { UsersPage } from '../pages/UsersPage'
+import { ApiDocsPage } from '../pages/ApiDocsPage'
 import { ProtectedRoute } from './ProtectedRoute'
 
 export function AppRouter() {
@@ -13,6 +14,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/api-docs" element={<ApiDocsPage />} />
 
       <Route
         path="/"
