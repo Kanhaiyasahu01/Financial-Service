@@ -33,9 +33,6 @@ The project follows layered design and separation of concerns.
 - `analyst`: same read access as viewer (records + summaries)
 - `admin`: full access (manage users and records)
 
-### Bootstrap Rule
-- The **first registered user** is automatically created as `admin`.
-- All later self-registrations are created as `viewer`.
 
 ## Setup
 1. Install dependencies:
@@ -67,57 +64,169 @@ npm start
 ## API Base URL
 `/api/v1`
 
-## Auth Endpoints
-### Register
-- `POST /api/v1/auth/register`
-- Body:
+## API Documentation (Detailed)
+
+### Response Format
+Success responses follow:
 ```json
 {
-  "name": "Admin User",
-  "email": "admin@demo.com",
-  "password": "password123"
+  "success": true,
+  "message": "...",
+  "data": {}
 }
 ```
 
-### Login
-- `POST /api/v1/auth/login`
-- Body:
+Error responses follow:
 ```json
 {
-  "email": "admin@demo.com",
-  "password": "password123"
+  "success": false,
+  "message": "...",
+  "details": []
 }
 ```
 
-Use token in header:
+### Authentication
+Use JWT in protected routes:
 `Authorization: Bearer <token>`
 
-## User Management (Admin only)
-### Create user
-- `POST /api/v1/users`
+### Health
+#### GET `/api/v1/health`
+Access: Public
 
-### List users
-- `GET /api/v1/users?page=1&limit=10&role=viewer&status=active`
+cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/health'
+```
 
-### Get user by id
-- `GET /api/v1/users/:id`
+Sample response:
+```json
+{
+  "success": true,
+  "message": "Finance dashboard API is healthy"
+}
+```
 
-### Update user
-- `PATCH /api/v1/users/:id`
+### Auth APIs
+#### POST `/api/v1/auth/register`
+Access: Public
 
-### Update user role
-- `PATCH /api/v1/users/:id/role`
+Request body:
+```json
+{
+  "name": "Admin One",
+  "email": "admin1@test.com",
+  "password": "password123"
+}
+```
 
-### Update user status (active/inactive)
-- `PATCH /api/v1/users/:id/status`
+cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/auth/register' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"name":"Admin One","email":"admin1@test.com","password":"password123"}'
+```
 
-### Delete user
-- `DELETE /api/v1/users/:id`
+Sample response:
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "_id": "USER_ID",
+      "name": "Admin One",
+      "email": "admin1@test.com",
+      "role": "admin",
+      "status": "active"
+    },
+    "token": "JWT_TOKEN"
+  }
+}
+```
 
-## Financial Records
-### Create record (Admin)
-- `POST /api/v1/records`
-- Body:
+#### POST `/api/v1/auth/login`
+Access: Public
+
+Request body:
+```json
+{
+  "email": "admin1@test.com",
+  "password": "password123"
+}
+```
+
+cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/auth/login' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"email":"admin1@test.com","password":"password123"}'
+```
+
+### User and Role Management APIs (Admin)
+#### POST `/api/v1/users`
+Create user
+
+#### GET `/api/v1/users?page=1&limit=10&role=viewer&status=active`
+List users with pagination/filter
+
+#### GET `/api/v1/users/:id`
+Get user by id
+
+#### PATCH `/api/v1/users/:id`
+Update user profile fields
+
+Request body example:
+```json
+{
+  "name": "Updated Name",
+  "email": "updated@test.com"
+}
+```
+
+#### PATCH `/api/v1/users/:id/role`
+Update only role
+
+Request body:
+```json
+{
+  "role": "analyst"
+}
+```
+
+cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/users/USER_ID/role' \
+  --header 'Authorization: Bearer JWT_TOKEN' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"role":"analyst"}'
+```
+
+#### PATCH `/api/v1/users/:id/status`
+Update active/inactive status
+
+Request body:
+```json
+{
+  "status": "inactive"
+}
+```
+
+cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/users/USER_ID/status' \
+  --header 'Authorization: Bearer JWT_TOKEN' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"status":"inactive"}'
+```
+
+#### DELETE `/api/v1/users/:id`
+Delete user
+
+### Financial Records CRUD APIs
+#### POST `/api/v1/records`
+Access: Admin
+
+Request body:
 ```json
 {
   "amount": 4500,
@@ -128,37 +237,66 @@ Use token in header:
 }
 ```
 
-### List records (Viewer/Analyst/Admin)
-- `GET /api/v1/records?type=expense&category=Food&startDate=2026-04-01&endDate=2026-04-30&page=1&limit=10&sortBy=date&sortOrder=desc&search=lunch`
+#### GET `/api/v1/records`
+Access: Viewer, Analyst, Admin
 
-### Get record by id (Viewer/Analyst/Admin)
-- `GET /api/v1/records/:id`
+Supported query params:
+- `page`, `limit`
+- `type` (`income` or `expense`)
+- `category`
+- `startDate`, `endDate`
+- `search`
+- `sortBy`, `sortOrder`
 
-### Update record (Admin)
-- `PATCH /api/v1/records/:id`
+Example:
+`/api/v1/records?type=expense&category=Food&startDate=2026-04-01&endDate=2026-04-30&page=1&limit=10&sortBy=date&sortOrder=desc&search=lunch`
 
-### Delete record (Admin)
-- `DELETE /api/v1/records/:id`
+#### GET `/api/v1/records/:id`
+Access: Viewer, Analyst, Admin
 
-## Dashboard Summary
-### Get summary (Viewer/Analyst/Admin)
-- `GET /api/v1/dashboard/summary`
+#### PATCH `/api/v1/records/:id`
+Access: Admin
+
+Request body example:
+```json
+{
+  "notes": "Updated note"
+}
+```
+
+#### DELETE `/api/v1/records/:id`
+Access: Admin
+
+Sample create record cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/records' \
+  --header 'Authorization: Bearer JWT_TOKEN' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"amount":4500,"type":"income","category":"Salary","date":"2026-04-01","notes":"April payout"}'
+```
+
+### Dashboard APIs
+#### GET `/api/v1/dashboard/summary`
+Access: Viewer, Analyst, Admin
 
 Returns:
 - total income
 - total expenses
 - net balance
 - category-wise totals
-- recent activity (top 5)
-- monthly trends (last 6 months)
+- recent activity
+- monthly trends
 
-## Validation and Error Handling
-- All key routes validate request params/query/body.
-- Centralized error middleware returns consistent error JSON.
-- Proper HTTP status codes used (400, 401, 403, 404, 409, 500).
+Sample cURL:
+```bash
+curl --location 'http://localhost:8080/api/v1/dashboard/summary' \
+  --header 'Authorization: Bearer JWT_TOKEN'
+```
 
-## Example Health Check
-- `GET /api/v1/health`
+### Validation and Reliability
+- Input validation is applied to params, body, and query.
+- Consistent error responses are returned on invalid input.
+- Common status codes: `400`, `401`, `403`, `404`, `409`, `500`.
 
 ## Deploy Backend On Render
 This project includes a Render blueprint file: `render.yaml`.
