@@ -159,6 +159,38 @@ Returns:
 ## Example Health Check
 - `GET /api/v1/health`
 
+## Deploy Backend On Render
+This project includes a Render blueprint file: `render.yaml`.
+
+### Option A: One-click Blueprint Deploy (recommended)
+1. Push this repo to GitHub.
+2. In Render dashboard, click `New +` -> `Blueprint`.
+3. Connect your GitHub repo and select branch.
+4. Render reads `render.yaml` and prepares the service.
+5. Set required secret env vars in Render:
+  - `MONGODB_URI`
+  - `JWT_SECRET`
+6. Deploy.
+
+### Option B: Manual Web Service Setup
+1. In Render dashboard, click `New +` -> `Web Service`.
+2. Connect your repo.
+3. Configure:
+  - Runtime: `Node`
+  - Build Command: `npm install`
+  - Start Command: `npm start`
+4. Add env vars:
+  - `NODE_ENV=production`
+  - `MONGODB_URI=<your_mongodb_uri>`
+  - `JWT_SECRET=<your_secret>`
+  - `JWT_EXPIRES_IN=7d`
+5. Deploy.
+
+### Verify Deployment
+1. Open: `https://<your-render-service>.onrender.com/api/v1/health`
+2. Expected response: success `true`.
+3. Update frontend API base URL/proxy target to this Render URL for production.
+
 ## Notes / Tradeoffs
 - Hard delete is used for user and record delete actions.
 - No refresh-token flow included (single access token for simplicity).
