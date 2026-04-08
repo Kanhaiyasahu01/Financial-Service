@@ -51,6 +51,7 @@ cp .env.example .env
 3. Fill required values in `.env`:
 - `MONGODB_URI`
 - `JWT_SECRET`
+- `CORS_ORIGINS` (comma-separated frontend URLs)
 - `PORT` (optional)
 
 4. Run app:
