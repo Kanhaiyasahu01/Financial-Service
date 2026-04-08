@@ -56,6 +56,14 @@ export class UserService {
     return this.userRepository.updateById(id, data);
   }
 
+  async updateUserRole(id, role, actorId) {
+    return this.updateUser(id, { role }, actorId);
+  }
+
+  async updateUserStatus(id, status, actorId) {
+    return this.updateUser(id, { status }, actorId);
+  }
+
   async deleteUser(id, actorId) {
     const user = await this.userRepository.findById(id);
 

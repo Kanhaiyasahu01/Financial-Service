@@ -1,14 +1,55 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { createUserByAdmin, fetchUsers } from '../features/users/usersSlice'
+import {
+  createUserByAdmin,
+  deleteUserByAdmin,
+  fetchUsers,
+  updateUserRoleByAdmin,
+  updateUserStatusByAdmin,
+} from '../features/users/usersSlice'
 
 const blank = { name: '', email: '', password: '', role: 'analyst', status: 'active' }
 
 export function UserManager() {
   const dispatch = useAppDispatch()
-  const { list, loading, creating, error } = useAppSelector((state) => state.users)
+  const { list, loading, creating, updating, deleting, error } = useAppSelector((state) => state.users)
   const [form, setForm] = useState(blank)
+
+  const onRoleChange = async (userId, role) => {
+    const action = await dispatch(updateUserRoleByAdmin({ userId, role }))
+
+    if (updateUserRoleByAdmin.fulfilled.match(action)) {
+      toast.success('User role updated')
+    } else {
+      toast.error(action.payload || 'Failed to update role')
+    }
+  }
+
+  const onStatusChange = async (userId, status) => {
+    const action = await dispatch(updateUserStatusByAdmin({ userId, status }))
+
+    if (updateUserStatusByAdmin.fulfilled.match(action)) {
+      toast.success('User status updated')
+    } else {
+      toast.error(action.payload || 'Failed to update status')
+    }
+  }
+
+  const onDeleteUser = async (userId, name) => {
+    const shouldDelete = window.confirm(`Delete user ${name}?`)
+    if (!shouldDelete) {
+      return
+    }
+
+    const action = await dispatch(deleteUserByAdmin(userId))
+
+    if (deleteUserByAdmin.fulfilled.match(action)) {
+      toast.success('User deleted')
+    } else {
+      toast.error(action.payload || 'Failed to delete user')
+    }
+  }
 
   const onSubmit = async (event) => {
     event.preventDefault()
@@ -87,12 +128,13 @@ export function UserManager() {
               <th className="pb-2">Email</th>
               <th className="pb-2">Role</th>
               <th className="pb-2">Status</th>
+              <th className="pb-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td className="py-2 text-slate-500" colSpan={4}>
+                <td className="py-2 text-slate-500" colSpan={5}>
                   Loading users...
                 </td>
               </tr>
@@ -102,8 +144,41 @@ export function UserManager() {
                 <tr className="border-b border-slate-100" key={user._id}>
                   <td className="py-2">{user.name}</td>
                   <td className="py-2">{user.email}</td>
-                  <td className="py-2 capitalize">{user.role}</td>
-                  <td className="py-2 capitalize">{user.status}</td>
+                  <td className="py-2">
+                    <select
+                      className="rounded border border-slate-200 px-2 py-1 capitalize"
+                      disabled={updating || deleting}
+                      onChange={(event) => onRoleChange(user._id, event.target.value)}
+                      value={user.role}
+                    >
+                      <option value="admin">admin</option>
+                      <option value="analyst">analyst</option>
+                      <option value="viewer">viewer</option>
+                    </select>
+                  </td>
+                  <td className="py-2">
+                    <select
+                      className="rounded border border-slate-200 px-2 py-1 capitalize"
+                      disabled={updating || deleting}
+                      onChange={(event) => onStatusChange(user._id, event.target.value)}
+                      value={user.status}
+                    >
+                      <option value="active">active</option>
+                      <option value="inactive">inactive</option>
+                    </select>
+                  </td>
+                  <td className="py-2">
+                    <button
+                      aria-label="Delete user"
+                      className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                      disabled={deleting || updating}
+                      onClick={() => onDeleteUser(user._id, user.name)}
+                      title="Delete user"
+                      type="button"
+                    >
+                      🗑
+                    </button>
+                  </td>
                 </tr>
               ))}
           </tbody>

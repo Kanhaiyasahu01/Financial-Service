@@ -1,6 +1,6 @@
 import { TableSkeleton } from './LoadingSkeletons'
 
-export function RecordsTable({ records, loading }) {
+export function RecordsTable({ records, loading, isAdmin = false, onDeleteRecord = () => {}, deleting = false }) {
   return (
     <div className="glass reveal rounded-2xl p-4">
       <h3 className="text-lg font-semibold">Recent Records</h3>
@@ -18,12 +18,13 @@ export function RecordsTable({ records, loading }) {
               <th className="pb-2">Type</th>
               <th className="pb-2">Amount</th>
               <th className="pb-2">Notes</th>
+              {isAdmin && <th className="pb-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {records.length === 0 && (
               <tr>
-                <td className="py-3 text-slate-500" colSpan={5}>
+                <td className="py-3 text-slate-500" colSpan={isAdmin ? 6 : 5}>
                   No records found.
                 </td>
               </tr>
@@ -39,6 +40,20 @@ export function RecordsTable({ records, loading }) {
                   </span>
                 </td>
                 <td className="max-w-52 truncate py-2">{record.notes || '-'}</td>
+                {isAdmin && (
+                  <td className="py-2">
+                    <button
+                      aria-label="Delete record"
+                      className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                      disabled={deleting}
+                      onClick={() => onDeleteRecord(record._id)}
+                      title="Delete record"
+                      type="button"
+                    >
+                      🗑
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

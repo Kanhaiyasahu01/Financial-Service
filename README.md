@@ -104,6 +104,12 @@ Use token in header:
 ### Update user
 - `PATCH /api/v1/users/:id`
 
+### Update user role
+- `PATCH /api/v1/users/:id/role`
+
+### Update user status (active/inactive)
+- `PATCH /api/v1/users/:id/status`
+
 ### Delete user
 - `DELETE /api/v1/users/:id`
 

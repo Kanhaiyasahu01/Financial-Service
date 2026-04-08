@@ -44,6 +44,26 @@ export const updateUser = asyncHandler(async (req, res) => {
   });
 });
 
+export const updateUserRole = asyncHandler(async (req, res) => {
+  const user = await userService.updateUserRole(req.params.id, req.body.role, req.user.id);
+
+  res.status(200).json({
+    success: true,
+    message: "User role updated successfully",
+    data: user,
+  });
+});
+
+export const updateUserStatus = asyncHandler(async (req, res) => {
+  const user = await userService.updateUserStatus(req.params.id, req.body.status, req.user.id);
+
+  res.status(200).json({
+    success: true,
+    message: "User status updated successfully",
+    data: user,
+  });
+});
+
 export const deleteUser = asyncHandler(async (req, res) => {
   await userService.deleteUser(req.params.id, req.user.id);
 

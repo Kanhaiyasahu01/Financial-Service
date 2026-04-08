@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { RecordForm } from '../components/RecordForm'
 import { RecordsTable } from '../components/RecordsTable'
-import { fetchRecords } from '../features/records/recordsSlice'
+import { deleteRecord, fetchRecords } from '../features/records/recordsSlice'
 
 const defaultFilters = {
   page: 1,
@@ -19,7 +19,7 @@ const defaultFilters = {
 export function RecordsPage() {
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
-  const { list, loading, error, pagination } = useAppSelector((state) => state.records)
+  const { list, loading, deleting, error, pagination } = useAppSelector((state) => state.records)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initial = useMemo(() => {
@@ -91,6 +91,21 @@ export function RecordsPage() {
     dispatch(fetchRecords(prev))
   }
 
+  const onDeleteRecord = async (recordId) => {
+    const shouldDelete = window.confirm('Delete this record?')
+    if (!shouldDelete) {
+      return
+    }
+
+    const action = await dispatch(deleteRecord(recordId))
+    if (deleteRecord.fulfilled.match(action)) {
+      toast.success('Record deleted')
+      dispatch(fetchRecords(filters))
+    } else {
+      toast.error(action.payload || 'Failed to delete record')
+    }
+  }
+
   const inputClass = 'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none'
 
   return (
@@ -152,7 +167,13 @@ export function RecordsPage() {
 
       <div className="grid gap-4 xl:grid-cols-5">
         <div className="xl:col-span-3">
-          <RecordsTable records={list} loading={loading} />
+          <RecordsTable
+            deleting={deleting}
+            isAdmin={user.role === 'admin'}
+            loading={loading}
+            onDeleteRecord={onDeleteRecord}
+            records={list}
+          />
           <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
             <p>
               Page {pagination?.page || 1} of {pagination?.pages || 1}

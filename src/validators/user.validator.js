@@ -39,6 +39,20 @@ export const userIdParamValidator = [
   param("id").isMongoId().withMessage("Valid user id is required"),
 ];
 
+export const updateUserRoleValidator = [
+  param("id").isMongoId().withMessage("Valid user id is required"),
+  body("role")
+    .isIn(ROLE_VALUES)
+    .withMessage(`Role must be one of: ${ROLE_VALUES.join(", ")}`),
+];
+
+export const updateUserStatusValidator = [
+  param("id").isMongoId().withMessage("Valid user id is required"),
+  body("status")
+    .isIn(["active", "inactive"])
+    .withMessage("Status must be active or inactive"),
+];
+
 export const listUsersValidator = [
   query("page").optional().isInt({ min: 1 }).withMessage("Page must be >= 1"),
   query("limit")

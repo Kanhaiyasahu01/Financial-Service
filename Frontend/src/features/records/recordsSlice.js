@@ -28,6 +28,17 @@ export const createRecord = createAsyncThunk('records/createRecord', async (payl
   }
 })
 
+export const deleteRecord = createAsyncThunk('records/deleteRecord', async (recordId, thunkApi) => {
+  try {
+    await apiClient.delete(`/records/${recordId}`)
+    thunkApi.dispatch(fetchRecords({ page: 1, limit: 10 }))
+    thunkApi.dispatch(fetchDashboardSummary())
+    return true
+  } catch (error) {
+    return thunkApi.rejectWithValue(error.response?.data?.message || 'Failed to delete record')
+  }
+})
+
 const recordsSlice = createSlice({
   name: 'records',
   initialState: {
@@ -35,6 +46,7 @@ const recordsSlice = createSlice({
     pagination: null,
     loading: false,
     creating: false,
+    deleting: false,
     error: null,
   },
   reducers: {},
@@ -62,6 +74,17 @@ const recordsSlice = createSlice({
       })
       .addCase(createRecord.rejected, (state, action) => {
         state.creating = false
+        state.error = action.payload
+      })
+      .addCase(deleteRecord.pending, (state) => {
+        state.deleting = true
+        state.error = null
+      })
+      .addCase(deleteRecord.fulfilled, (state) => {
+        state.deleting = false
+      })
+      .addCase(deleteRecord.rejected, (state, action) => {
+        state.deleting = false
         state.error = action.payload
       })
   },

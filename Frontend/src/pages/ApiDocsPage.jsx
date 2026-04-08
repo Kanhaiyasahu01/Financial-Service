@@ -185,6 +185,58 @@ const endpointGroups = [
         },
       },
       {
+        name: 'Update User Role',
+        method: 'PATCH',
+        path: '/users/:id/role',
+        auth: 'Bearer Token (admin)',
+        description: 'Update only user role.',
+        request: {
+          headers: {
+            Authorization: 'Bearer JWT_TOKEN',
+          },
+          pathParams: {
+            id: 'USER_ID',
+          },
+          body: {
+            role: 'viewer',
+          },
+        },
+        response: {
+          success: true,
+          message: 'User role updated successfully',
+          data: {
+            _id: 'USER_ID',
+            role: 'viewer',
+          },
+        },
+      },
+      {
+        name: 'Update User Status',
+        method: 'PATCH',
+        path: '/users/:id/status',
+        auth: 'Bearer Token (admin)',
+        description: 'Update only user status to active/inactive.',
+        request: {
+          headers: {
+            Authorization: 'Bearer JWT_TOKEN',
+          },
+          pathParams: {
+            id: 'USER_ID',
+          },
+          body: {
+            status: 'inactive',
+          },
+        },
+        response: {
+          success: true,
+          message: 'User status updated successfully',
+          data: {
+            _id: 'USER_ID',
+            status: 'inactive',
+          },
+        },
+      },
+      {
         name: 'Delete User',
         method: 'DELETE',
         path: '/users/:id',
